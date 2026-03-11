@@ -14,6 +14,9 @@ env/
 # Temp generated app dirs
 /tmp/appbuilder_*/
 
+# Old output folder (projects now saved to ~/Projects/)
+output/
+
 # OS
 .DS_Store
 Thumbs.db

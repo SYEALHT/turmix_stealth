@@ -203,6 +203,56 @@ async def status_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+# ── /cmd command ──────────────────────────────────────────────────────────────
+
+@tree.command(name="cmd", description="Show all available bot commands")
+async def cmd_command(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="📋 Turmux Vibe — Available Commands",
+        description="Here are all the commands you can use:",
+        color=0x4285F4,
+    )
+    
+    embed.add_field(
+        name="🔨 /build",
+        value="Generate a full app from plain English\n`/build description: make me a todo app with Flask`",
+        inline=False,
+    )
+    embed.add_field(
+        name="🔧 /update",
+        value="Update an existing GitHub repo with AI\n`/update repo: my-app changes: add dark mode`",
+        inline=False,
+    )
+    embed.add_field(
+        name="🧠 /model",
+        value="Switch between AI models (GPT-4o, Gemini, Llama, etc.)",
+        inline=False,
+    )
+    embed.add_field(
+        name="🟢 /status",
+        value="Check bot status and configured API keys",
+        inline=True,
+    )
+    embed.add_field(
+        name="🔑 /keys",
+        value="Live-validate all your API keys",
+        inline=True,
+    )
+    embed.add_field(
+        name="📊 /apiinfo",
+        value="Check API details, quotas, and rate limits",
+        inline=True,
+    )
+    embed.add_field(
+        name="📋 /cmd",
+        value="Show this help message",
+        inline=True,
+    )
+    
+    embed.set_footer(text="Turmux Vibe | AI-powered app generation")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 # ── Shared model state ────────────────────────────────────────────────────────
 # Models the user can choose from. Stored as a module-level variable so /build picks it up.
 
