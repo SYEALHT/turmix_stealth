@@ -70,7 +70,7 @@ class GitHubPusher:
             except GithubException as e:
                 print(f"[GitHub]   ⚠️  Skipped {gen_file.path}: {e.data.get('message', str(e))}")
 
-        print(f"[GitHub] 🎉 All files pushed to: {repo.html_url}\")")
+        print(f"[GitHub] 🎉 All files pushed to: {repo.html_url}")
         return repo.html_url, repo
 
     def update_description(self, repo, live_url: str):

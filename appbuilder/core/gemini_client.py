@@ -18,6 +18,17 @@ from google import genai
 from google.genai import types
 from config import config
 
+# ── Load Coding Standards ──────────────────────────────────────────────────────
+from pathlib import Path
+
+_STANDARDS_FILE = Path(__file__).parent / "CODING_STANDARDS.md"
+CODING_STANDARDS = ""
+if _STANDARDS_FILE.exists():
+    CODING_STANDARDS = _STANDARDS_FILE.read_text(encoding="utf-8")
+    print(f"[GeminiClient] ✅ Loaded coding standards ({len(CODING_STANDARDS)} chars)")
+else:
+    print("[GeminiClient] ⚠️ CODING_STANDARDS.md not found — using basic prompts")
+
 # ── System Prompts ─────────────────────────────────────────────────────────────
 
 PLAN_PROMPT = """You are an expert software architect specializing in full-stack web and SaaS applications.
@@ -51,7 +62,11 @@ RULES:
 6. Do NOT include any code in this response. Only the manifest.
 """
 
-FILE_PROMPT_TEMPLATE = """You are an expert {tech} developer.
+FILE_PROMPT_TEMPLATE = """You are an expert {tech} developer. You MUST follow the coding standards below EXACTLY.
+
+=== CODING STANDARDS (MANDATORY) ===
+{coding_standards}
+=== END CODING STANDARDS ===
 
 Generate the COMPLETE content for this file: {file_path}
 Description: {file_description}
@@ -59,13 +74,15 @@ Description: {file_description}
 This file is part of: {app_description}
 Tech stack: {tech_stack}
 
-Rules:
+CRITICAL RULES:
 - Output ONLY the file content. No explanations, no markdown fences, no preamble.
-- Make it complete and production-ready. No placeholders, no TODO comments.
-- Include proper error handling, comments where helpful, and follow best practices.
-- For HTML templates, make them visually stunning: modern design, Google Fonts via CDN, dark/light theme with gradient accents, smooth animations, mobile-responsive.
-- For Python/backend files, use proper logging, environment variables for secrets.
-- For Dockerfiles, use multi-stage builds and best security practices where appropriate.
+- NEVER use placeholders like TODO, pass, ..., or "implement later"
+- EVERY file must be COMPLETE and WORKING — no truncation
+- Include proper error handling, comments where helpful
+- All imports must reference files that actually exist
+- For HTML: modern design, Google Fonts, dark/light theme, mobile-responsive
+- For Python: use logging module, environment variables for secrets
+- For Dockerfiles: multi-stage builds, non-root user
 """
 
 
@@ -218,6 +235,7 @@ class GeminiClient:
                 file_description=file_desc,
                 app_description=f"{repo_name}: {description}",
                 tech_stack=tech_str,
+                coding_standards=CODING_STANDARDS[:8000] if CODING_STANDARDS else "No standards loaded",
             )
 
             # Bigger token budget for source files, smaller for docs

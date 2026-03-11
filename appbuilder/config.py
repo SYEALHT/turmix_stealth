@@ -38,8 +38,9 @@ class Config:
     def validate(cls):
         """Raise an error if critical secrets are missing."""
         missing = []
-        if not cls.GEMINI_API_KEY:
-            missing.append("GEMINI_API_KEY")
+        # GEMINI_API_KEY is optional if GITHUB_TOKEN is set (GitHub Models provides free AI)
+        if not cls.GEMINI_API_KEY and not cls.GITHUB_TOKEN and not cls.GROQ_API_KEY:
+            missing.append("GEMINI_API_KEY (or GITHUB_TOKEN for GitHub Models, or GROQ_API_KEY)")
         if not cls.GITHUB_TOKEN:
             missing.append("GITHUB_TOKEN")
         if not cls.GITHUB_USERNAME:

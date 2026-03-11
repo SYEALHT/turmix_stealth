@@ -21,8 +21,15 @@ ARCHITECTURE (Two-Pass):
 import time
 import json
 import re
+from pathlib import Path
 from openai import OpenAI
 from config import config
+
+# ── Load Coding Standards ──────────────────────────────────────────────────────
+_STANDARDS_FILE = Path(__file__).parent / "CODING_STANDARDS.md"
+CODING_STANDARDS = ""
+if _STANDARDS_FILE.exists():
+    CODING_STANDARDS = _STANDARDS_FILE.read_text(encoding="utf-8")
 
 # ── System Prompts (same as groq_client) ──────────────────────────────────────
 
@@ -56,7 +63,11 @@ RULES:
 5. Do NOT include any code in this response. Only the manifest.
 """
 
-FILE_PROMPT_TEMPLATE = """You are an expert {tech} developer.
+FILE_PROMPT_TEMPLATE = """You are an expert {tech} developer. You MUST follow the coding standards below EXACTLY.
+
+=== CODING STANDARDS (MANDATORY) ===
+{coding_standards}
+=== END CODING STANDARDS ===
 
 Generate the COMPLETE content for this file: {file_path}
 Description: {file_description}
@@ -64,12 +75,13 @@ Description: {file_description}
 This file is part of: {app_description}
 Tech stack: {tech_stack}
 
-Rules:
+CRITICAL RULES:
 - Output ONLY the raw file content. No explanations, no markdown fences, no preamble.
-- Make it complete and production-ready. No placeholders, no TODO.
+- NEVER use placeholders like TODO, pass, ..., or "implement later"
+- EVERY file must be COMPLETE and WORKING — no truncation
 - For HTML: use Google Fonts CDN, modern dark/light theme, gradient accents, smooth animations, mobile-responsive.
 - For Python/backend: proper logging, environment variables for secrets.
-- For Dockerfiles: best security practices.
+- For Dockerfiles: best security practices, non-root user.
 """
 
 # ── GitHub Models available via the inference API ─────────────────────────────
@@ -218,6 +230,7 @@ class GitHubModelsClient:
                 file_description=file_desc,
                 app_description=f"{repo_name}: {description}",
                 tech_stack=tech_str,
+                coding_standards=CODING_STANDARDS[:8000] if CODING_STANDARDS else "No standards loaded",
             )
 
             is_doc = file_path.endswith(".md") or file_path.endswith(".txt")
