@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Turmux Vibe ⚡ アプリビルダー</title>
+<meta name="description" content="Turmux Vibe: AI-powered full-stack app generator."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #070913;
+  --surface: rgba(18, 22, 40, 0.65);
+  --card: rgba(26, 32, 53, 0.7);
+  --pink: #ff2a6d;
+  --pink-glow: rgba(255, 42, 109, 0.6);
+  --cyan: #05d9e8;
+  --cyan-glow: rgba(5, 217, 232, 0.6);
+  --yellow: #f1c40f;
+  --text: #f0f4f8;
+  --text-muted: #8c9bba;
+  --border: rgba(5, 217, 232, 0.2);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { 
+  background: var(--bg); color: var(--text); 
+  font-family: 'Outfit', 'M PLUS 1p', sans-serif; 
+  overflow-x: hidden; 
+}
+::selection { background: var(--pink); color: #fff; }
+::-webkit-scrollbar { width: 6px; } 
+::-webkit-scrollbar-track { background: var(--bg); } 
+::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 3px; }
+
+/* ─── CANVAS BACKGROUND ─────────────────────────────────────── */
+#bg-canvas { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
+.bg-gradient {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 42, 109, 0.15), transparent 60%),
+              radial-gradient(circle at 100% 100%, rgba(5, 217, 232, 0.1), transparent 50%);
+}
+
+/* ─── NAV ─────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
+  background: rgba(7, 9, 19, 0.8); padding: 1rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  animation: slideDown 0.8s ease forwards;
+}
+@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
+.nav-logo {
+  font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em;
+  color: #fff; text-shadow: 0 0 10px var(--pink), 2px 2px 0px var(--cyan);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.nav-logo span { font-family: 'M PLUS 1p', sans-serif; font-size: 0.8rem; color: var(--cyan); text-shadow: none; font-weight: 700; letter-spacing: 0.1em;}
+
+.nav-links { display: flex; gap: 2.5rem; align-items: center; }
+.nav-links a { 
+  color: var(--text); font-size: 0.9rem; font-weight: 600; text-decoration: none; 
+  text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.3s;
+  position: relative;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px;
+  background: var(--cyan); transition: width 0.3s ease; box-shadow: 0 0 8px var(--cyan);
+}
+.nav-links a:hover { color: var(--cyan); }
+.nav-links a:hover::after { width: 100%; }
+
+/* ─── MECHA BUTTON ───────────────────────────────────────────── */
+.btn-mecha {
+  display: inline-block; background: transparent; color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.9rem;
+  padding: 0.8rem 2rem; position: relative; text-decoration: none; text-transform: uppercase;
+  border: 1px solid var(--cyan); transition: all 0.3s; cursor: pointer;
+  box-shadow: inset 0 0 10px rgba(5,217,232,0.2), 0 0 10px rgba(5,217,232,0.2);
+}
+.btn-mecha::before, .btn-mecha::after {
+  content: ''; position: absolute; width: 10px; height: 10px; border: 2px solid var(--pink); transition: all 0.3s;
+}
+.btn-mecha::before { top: -4px; left: -4px; border-right: none; border-bottom: none; }
+.btn-mecha::after { bottom: -4px; right: -4px; border-left: none; border-top: none; }
+.btn-mecha:hover {
+  background: rgba(5, 217, 232, 0.15); color: #fff; border-color: var(--pink);
+  box-shadow: inset 0 0 20px rgba(255,42,109,0.4), 0 0 20px rgba(255,42,109,0.4);
+  transform: scale(1.05);
+}
+.btn-mecha:hover::before { top: 4px; left: 4px; border-color: var(--cyan); }
+.btn-mecha:hover::after { bottom: 4px; right: 4px; border-color: var(--cyan); }
+
+/* ─── HERO ─────────────────────────────────────────────────────── */
+#hero {
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 8rem 1.5rem 4rem; text-align: center; position: relative;
+}
+.hero-tag {
+  font-family: 'JetBrains Mono', monospace; color: var(--pink); font-size: 0.85rem;
+  font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+  margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 0.8rem;
+  background: rgba(255, 42, 109, 0.1); padding: 0.4rem 1.2rem; border: 1px solid rgba(255, 42, 109, 0.3);
+  border-radius: 4px; animation: fadeIn 1s ease 0.5s both;
+}
+.hero-tag::before { content: '▶'; color: var(--cyan); animation: blink 1s infinite; }
+
+/* Glitch Title */
+.glitch-wrapper { position: relative; margin-bottom: 1.5rem; animation: popIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both; }
+.glitch-title {
+  font-size: clamp(3rem, 7vw, 6rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em;
+  color: #fff; text-shadow: 0 0 20px rgba(255, 255, 255, 0.3); position: relative;
+}
+.glitch-title span { color: var(--cyan); text-shadow: 2px 2px 0px var(--pink); display: inline-block; }
+
+.hero-sub {
+  font-size: 1.2rem; color: var(--text-muted); line-height: 1.6; max-width: 650px; margin: 0 auto 3rem;
+  animation: fadeUp 1s ease 0.4s both; font-weight: 400;
+}
+.hero-btns { display: flex; gap: 1.5rem; justify-content: center; animation: fadeUp 1s ease 0.6s both; }
+
+/* Floating Elements */
+.float-el {
+  position: absolute; border: 1px solid var(--border); background: var(--surface);
+  backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: float 6s ease-in-out infinite;
+}
+.fe-1 { top: 20%; left: 10%; animation-delay: 0s; }
+.fe-2 { bottom: 25%; right: 10%; animation-delay: -3s; border-color: rgba(255,42,109,0.3); color: var(--pink); }
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(2deg); } }
+
+/* ─── TERMINAL HUD ────────────────────────────────────────────── */
+.hud-terminal {
+  margin-top: 4rem; width: 100%; max-width: 750px; background: rgba(10, 12, 24, 0.8);
+  border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px var(--cyan-glow);
+  border-radius: 4px; position: relative; animation: fadeUp 1s ease 0.8s both; text-align: left;
+}
+.hud-terminal::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--pink), transparent);
+}
+.hud-header {
+  padding: 0.5rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--cyan); text-transform: uppercase;
+}
+.hud-body { padding: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.8; min-height: 220px; }
+.th-prompt { color: var(--pink); font-weight: 700; }
+.th-cmd { color: #fff; }
+.th-info { color: var(--text-muted); }
+.th-success { color: var(--cyan); text-shadow: 0 0 5px var(--cyan); }
+.th-warn { color: var(--yellow); }
+.th-cursor { display: inline-block; width: 8px; height: 1em; background: var(--pink); vertical-align: middle; animation: blink 1s infinite; }
+
+/* ─── SECTION COMMON ──────────────────────────────────────────── */
+section { padding: 8rem 1.5rem; position: relative; }
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.section-header { text-align: center; margin-bottom: 4rem; }
+.section-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--pink);
+  text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 1rem;
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
+}
+.section-label::before, .section-label::after { content: ''; height: 1px; width: 40px; background: var(--pink); opacity: 0.5; }
+.section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+
+/* ─── CARDS (BENTO/FEATURES) ──────────────────────────────────── */
+.grid-bento { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.hud-card {
+  background: var(--card); backdrop-filter: blur(10px); border: 1px solid var(--border);
+  padding: 2rem; border-radius: 4px; position: relative; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden; cursor: crosshair;
+}
+.hud-card::before {
+  content: '◤'; position: absolute; top: 10px; left: 10px; color: rgba(5,217,232,0.3); font-size: 0.8rem; transition: color 0.3s;
+}
+.hud-card::after {
+  content: '◢'; position: absolute; bottom: 10px; right: 10px; color: rgba(255,42,109,0.3); font-size: 0.8rem; transition: color 0.3s;
+}
+.hud-card-overlay {
+  position: absolute; inset: 0; background: linear-gradient(135deg, rgba(5,217,232,0.1), rgba(255,42,109,0.1));
+  opacity: 0; transition: opacity 0.4s; pointer-events: none;
+}
+.hud-card:hover {
+  transform: translateY(-8px) scale(1.02); border-color: var(--cyan);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 20px rgba(5,217,232,0.2), inset 0 0 15px rgba(255,42,109,0.1);
+}
+.hud-card:hover::before { color: var(--cyan); }
+.hud-card:hover::after { color: var(--pink); }
+.hud-card:hover .hud-card-overlay { opacity: 1; }
+
+.hc-icon {
+  font-size: 2rem; margin-bottom: 1.5rem; display: inline-block;
+  text-shadow: 0 0 15px currentColor;
+}
+.hc-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.8rem; color: #fff; }
+.hc-desc { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+.hc-tag {
+  position: absolute; top: 1.5rem; right: 1.5rem; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; padding: 0.2rem 0.5rem; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); color: var(--cyan);
+}
+
+/* ─── HOW IT WORKS (TIMELINE) ─────────────────────────────────── */
+.timeline { position: relative; max-width: 800px; margin: 0 auto; }
+.timeline::before {
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(to bottom, var(--cyan), var(--pink)); transform: translateX(-50%); opacity: 0.3;
+}
+.t-item { display: flex; justify-content: flex-end; padding-right: 50%; position: relative; margin-bottom: 4rem; width: 100%; }
+.t-item:nth-child(even) { justify-content: flex-start; padding-right: 0; padding-left: 50%; }
+.t-content {
+  width: 85%; background: var(--card); border: 1px solid var(--border); padding: 2rem; border-radius: 4px;
+  position: relative; transition: transform 0.3s;
+}
+.t-item:hover .t-content { transform: scale(1.03); border-color: var(--pink); box-shadow: 0 0 20px var(--pink-glow); }
+.t-node {
+  position: absolute; top: 50%; right: -21px; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--cyan); transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 800; font-family: 'JetBrains Mono';
+  box-shadow: 0 0 15px var(--cyan-glow); z-index: 2; transition: all 0.3s;
+}
+.t-item:nth-child(even) .t-node { right: auto; left: -21px; border-color: var(--pink); color: var(--pink); box-shadow: 0 0 15px var(--pink-glow); }
+.t-item:hover .t-node { background: var(--cyan); color: #000; }
+.t-item:nth-child(even):hover .t-node { background: var(--pink); color: #fff; }
+
+.t-content h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff; }
+.t-content p { color: var(--text-muted); line-height: 1.6; }
+
+/* ─── ANIMATIONS & UTILS ──────────────────────────────────────── */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes fadeUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+.reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.del-1 { transition-delay: 0.1s; } .del-2 { transition-delay: 0.2s; } .del-3 { transition-delay: 0.3s; }
+
+/* ─── TECH TICKER (ANIME STYLE) ───────────────────────────────── */
+.ticker-container { overflow: hidden; white-space: nowrap; padding: 2rem 0; background: rgba(5,217,232,0.05); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: rotate(-2deg) scale(1.05); margin: 6rem 0; }
+.ticker-items { display: inline-block; animation: scrollLeft 20s linear infinite; }
+.ticker-items.reverse { animation: scrollRight 25s linear infinite; }
+.ticker-item {
+  display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700;
+  color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.4); margin: 0 2rem; text-transform: uppercase;
+  transition: all 0.3s;
+}
+.ticker-item:hover { color: var(--pink); -webkit-text-stroke: 0px; text-shadow: 0 0 15px var(--pink-glow); }
+@keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+/* ─── FOOTER ──────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border); padding: 4rem 2rem 2rem; text-align: center;
+  background: rgba(7, 9, 19, 0.9); position: relative; z-index: 10;
+}
+.foot-logo { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem; text-shadow: 0 0 10px var(--cyan); }
+.foot-text { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+.foot-links { display: flex; justify-content: center; gap: 2rem; }
+.foot-links a { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; text-decoration: none; text-transform: uppercase; }
+.foot-links a:hover { color: var(--pink); text-shadow: 0 0 10px var(--pink); }
+
+/* Responsive adjustments */
+@media(max-width: 768px) {
+  .nav-links { display: none; }
+  .t-item, .t-item:nth-child(even) { justify-content: flex-start; padding: 0 0 0 40px; }
+  .timeline::before { left: 10px; }
+  .t-node, .t-item:nth-child(even) .t-node { left: -10px; right: auto; width: 30px; height: 30px; font-size: 0.8rem; }
+  .t-content { width: 100%; }
+  .glitch-title { font-size: 2.5rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="bg-gradient"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Turmux Vibe <span>アプリ</span></div>
+  <div class="nav-links">
+    <a href="#system">System</a>
+    <a href="#features">Modules</a>
+    <a href="#demo">Console</a>
+  </div>
+  <a href="https://github.com" class="btn-mecha">Deploy_Now</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="float-el fe-1">[ SYS.INIT ]<br/>AI_MODELS: 15+</div>
+  <div class="float-el fe-2">[ STATUS ]<br/>READY_TO_BUILD</div>
+
+  <div class="hero-tag">System Ready // Type your vision</div>
+  
+  <div class="glitch-wrapper">
+    <h1 class="glitch-title">BUILD YOUR <br/><span>DREAM APP</span> INSTANTLY.</h1>
+  </div>
+  
+  <p class="hero-sub">Enter a plain-English prompt. Our AI engine orchestrates 15+ models to architect, code, validate, and deploy a full-stack repository to your GitHub in minutes.</p>
+  
+  <div class="hero-btns">
+    <a href="#demo" class="btn-mecha">Initialize System</a>
+  </div>
+
+  <div class="hud-terminal">
+    <div class="hud-header">
+      <span>USER@TURMUX-VIBE:~</span>
+      <span>[ ONLINE ]</span>
+    </div>
+    <div class="hud-body" id="hud-text">
+      <span class="th-info">Establishing neural link to GitHub Models...</span><br/>
+      <span class="th-success">Connection secure. Waiting for prompt...</span><br/>
+      <span class="th-prompt">> </span><span class="th-cursor"></span>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-container">
+  <div class="ticker-items" id="ticker-fw">
+    <!-- filled via JS -->
+  </div>
+</div>
+
+<!-- HOW IT WORKS TIMELINE -->
+<section id="system">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-label">Pipeline Architecture</div>
+      <h2 class="section-title">3-Phase Generation Protocol</h2>
+    </div>
+    
+    <div class="timeline">
+      <div class="t-item reveal del-1">
+        <div class="t-node">01</div>
+        <div class="t-content">
+          <h3>Neural Input & Architecture Plan</h3>
+          <p>Submit your prompt via Discord or CLI. The primary AI (GPT-4o or Claude 3.5) analyzes the requirements and drafts a comprehensive JSON manifest detailing every file, route, and dependency needed.</p>
+        </div>
+      </div>
+      <div class="t-item reveal del-2">
+        <div class="t-content">
+          <h3>Parallel Code Synthesis</h3>
+          <p>The orchestrator spawns generator tasks for each file. Using the context from Pass 1, models write source code, Dockerfiles, and documentation concurrently, optimizing for speed and coherence.</p>
+        </div>
+        <div class="t-node">02</div>
+      </div>
+      <div class="t-item reveal del-3">
+        <div class="t-node">03</div>
+        <div class="t-content">
+          <h3>Validation & Auto-Deployment</h3>
+          <p>A third validation pass audits the generated code for linting errors or missing imports. Once cleared, the payload is directly pushed to a private GitHub repo via the Contents API, ready for Vercel.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES BENTO -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-label">Core Modules</div>
+      <h2 class="section-title">Augmented Capabilities</h2>
+    </div>
+    
+    <div class="grid-bento">
+      <div class="hud-card reveal del-1">
+        <div class="hud-card-overlay"></div>
+        <div class="hc-tag">CORE</div>
+        <div class="hc-icon" style="color: var(--cyan);">⚛️</div>
+        <div class="hc-title">15+ AI Engine Support</div>
+        <div class="hc-desc">Seamlessly switch between GPT-4o, Claude 3.5, Llama 3.1 405B, and Gemini 2.5. Intelligent fallback ensures generation never halts due to rate limits.</div>
+      </div>
+      
+      <div class="hud-card reveal del-2">
+        <div class="hud-card-overlay"></div>
+        <div class="hc-tag">UX</div>
+        <div class="hc-icon" style="color: var(--pink);">👾</div>
+        <div class="hc-title">Discord Interface</div>
+        <div class="hc-desc">Command your builds directly from Discord using slash commands (/build, /update). Real-time generation streams and rich embeds keep you updated.</div>
+      </div>
+      
+      <div class="hud-card reveal del-3">
+        <div class="hud-card-overlay"></div>
+        <div class="hc-tag">SYS</div>
+        <div class="hc-icon" style="color: var(--yellow);">📱</div>
+        <div class="hc-title">Termux Mobile First</div>
+        <div class="hc-desc">Built to run flawlessly on Android via Termux. Generate complex multi-container architectures while on the subway, no laptop required.</div>
+      </div>
+
+      <div class="hud-card reveal del-1">
+        <div class="hud-card-overlay"></div>
+        <div class="hc-tag">NET</div>
+        <div class="hc-icon" style="color: #60a5fa;">🐙</div>
+        <div class="hc-title">Instant GitHub Sync</div>
+        <div class="hc-desc">Bypasses local git CLI entirely. Constructs and pushes the entire repository securely to your private GitHub account using the Contents API.</div>
+      </div>
+
+      <div class="hud-card reveal del-2">
+        <div class="hud-card-overlay"></div>
+        <div class="hc-tag">DEV</div>
+        <div class="hc-icon" style="color: #34d399;">🚀</div>
+        <div class="hc-title">Vercel Auto-Deploy</div>
+        <div class="hc-desc">Attach your Vercel token, and the system immediately maps your new GitHub repo to a live production URL the moment generation completes.</div>
+      </div>
+
+      <div class="hud-card reveal del-3">
+        <div class="hud-card-overlay"></div>
+        <div class="hc-tag">MUTATE</div>
+        <div class="hc-icon" style="color: #a78bfa;">🔄</div>
+        <div class="hc-title">Intelligent Repo Updater</div>
+        <div class="hc-desc">Don't just build—iterate. Use /update to describe new features. The AI fetches existing files, diffs the changes, and applies them perfectly.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVERSE TICKER -->
+<div class="ticker-container" style="transform: rotate(2deg) scale(1.05); margin-top: 0;">
+  <div class="ticker-items reverse" id="ticker-rv">
+    <!-- filled via JS -->
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">TURMUX_VIBE // V1.0</div>
+  <p class="foot-text">Engineered for speed. Powered by GitHub Models & Gemini.</p>
+  <div class="foot-links">
+    <a href="#">[ GitHub ]</a>
+    <a href="#">[ Documentation ]</a>
+    <a href="#">[ Discord ]</a>
+  </div>
+</footer>
+
+<script>
+/* ─── CANVAS SAKURA/PARTICLES ─────────────────────────────── */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [];
+  
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  
+  class Particle {
+    constructor() {
+      this.reset();
+      this.y = Math.random() * h; // initial random distribution
+    }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = -10;
+      this.size = Math.random() * 3 + 1;
+      this.speedY = Math.random() * 1.5 + 0.5;
+      this.speedX = Math.random() * 1 - 0.5;
+      this.angle = Math.random() * Math.PI * 2;
+      this.spin = (Math.random() - 0.5) * 0.1;
+      this.color = Math.random() > 0.5 ? 'rgba(255, 42, 109, 0.4)' : 'rgba(5, 217, 232, 0.4)';
+    }
+    update() {
+      this.y += this.speedY;
+      this.x += Math.sin(this.angle) * 0.5 + this.speedX;
+      this.angle += this.spin;
+      if (this.y > h + 10) this.reset();
+    }
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = this.color;
+      // Draw a small stylized petal/diamond
+      ctx.beginPath();
+      ctx.moveTo(0, -this.size);
+      ctx.lineTo(this.size/2, 0);
+      ctx.lineTo(0, this.size);
+      ctx.lineTo(-this.size/2, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function init() {
+    resize();
+    particles = [];
+    for(let i=0; i<60; i++) particles.push(new Particle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    // Draw subtle grid
+    ctx.strokeStyle = 'rgba(5, 217, 232, 0.03)';
+    ctx.lineWidth = 1;
+    for(let x=0; x<w; x+=80) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0; y<h; y+=80) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', init);
+  init(); animate();
+})();
+
+/* ─── TERMINAL TYPEWRITER & SEQUENCE ──────────────────────── */
+(function(){
+  const hud = document.getElementById('hud-text');
+  const sequence = [
+    {t: '/build prompt="cyberpunk chat app with web sockets"', type: 'cmd'},
+    {t: '[SYS] Analyzing prompt matrix...', type: 'info', delay: 800},
+    {t: '[PASS 1] Architecture generated by GPT-4o. Files: 14', type: 'success', delay: 1200},
+    {t: '[PASS 2] Initiating concurrent parallel synthesis...', type: 'info', delay: 600},
+    {t: ' > Generating backend/server.py [||||||||||] 100%', type: 'info', delay: 300},
+    {t: ' > Generating frontend/App.jsx  [||||||||||] 100%', type: 'info', delay: 300},
+    {t: '[PASS 3] Code structure validated. Zero anomalies.', type: 'success', delay: 1000},
+    {t: '[NET] Pushing payload to GitHub repository...', type: 'info', delay: 800},
+    {t: 'DEPLOYMENT SUCCESSFUL.', type: 'warn', delay: 1000},
+    {t: 'URL: https://github.com/user/cyberpunk-chat', type: 'success', delay: 200}
+  ];
+
+  let seqIndex = 0;
+  
+  async function typeLine(text, className) {
+    const span = document.createElement('span');
+    span.className = className;
+    hud.insertBefore(span, hud.lastElementChild.previousElementSibling); // insert before prompt line
+    
+    for(let i=0; i<text.length; i++) {
+      span.textContent += text[i];
+      await new Promise(r => setTimeout(r, 20 + Math.random()*30));
+    }
+    
+    const br = document.createElement('br');
+    hud.insertBefore(br, hud.lastElementChild.previousElementSibling);
+    hud.scrollTop = hud.scrollHeight;
+  }
+
+  async function addLine(text, className) {
+    const span = document.createElement('span');
+    span.className = className;
+    span.textContent = text;
+    hud.insertBefore(span, hud.lastElementChild.previousElementSibling);
+    const br = document.createElement('br');
+    hud.insertBefore(br, hud.lastElementChild.previousElementSibling);
+    hud.scrollTop = hud.scrollHeight;
+  }
+
+  async function runSequence() {
+    await new Promise(r => setTimeout(r, 2000));
+    for(const step of sequence) {
+      if(step.delay) await new Promise(r => setTimeout(r, step.delay));
+      
+      let cls = 'th-info';
+      if(step.type === 'cmd') { cls = 'th-cmd'; await typeLine(step.t, cls); }
+      else if(step.type === 'success') { cls = 'th-success'; await addLine(step.t, cls); }
+      else if(step.type === 'warn') { cls = 'th-warn'; await addLine(step.t, cls); }
+      else { await addLine(step.t, cls); }
+    }
+    
+    await new Promise(r => setTimeout(r, 5000));
+    // Reset
+    hud.innerHTML = `<span class="th-prompt">> </span><span class="th-cursor"></span>`;
+    runSequence();
+  }
+
+  runSequence();
+})();
+
+/* ─── SCROLL REVEAL ───────────────────────────────────────── */
+(function(){
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+})();
+
+/* ─── TICKER POPULATOR ────────────────────────────────────── */
+(function(){
+  const items = ['React', 'FastAPI', 'PostgreSQL', 'Docker', 'Vercel', 'GPT-4o', 'Claude-3.5', 'Gemini-2.5', 'Llama-3.1', 'Python', 'TailwindCSS', 'TypeScript'];
+  const fwStr = items.map(i => `<div class="ticker-item">${i}</div>`).join('');
+  
+  const cont1 = document.getElementById('ticker-fw');
+  cont1.innerHTML = fwStr + fwStr + fwStr;
+  
+  const cont2 = document.getElementById('ticker-rv');
+  cont2.innerHTML = fwStr + fwStr + fwStr;
+})();
+</script>
+</body>
+</html>

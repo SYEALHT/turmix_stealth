@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Models — Token Tester</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --card: #1c2128; --border: #30363d;
+      --accent: #238636; --accent2: #1f6feb; --glow: rgba(35,134,54,.25);
+      --glow2: rgba(31,111,235,.2); --text: #e6edf3; --muted: #7d8590;
+      --success: #3fb950; --error: #f85149; --warn: #d29922; --code-bg: #0d1117;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(35,134,54,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(35,134,54,.04) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none; z-index: 0;
+    }
+    .wrapper { position: relative; z-index: 1; width: 100%; max-width: 760px; display: flex; flex-direction: column; gap: 1.5rem; }
+    .header { text-align: center; padding: 1rem 0 0; }
+    .header .logo { display: inline-flex; align-items: center; gap: .6rem; margin-bottom: .75rem; }
+    .header .logo svg { width: 36px; height: 36px; fill: var(--text); }
+    .header h1 { font-size: 1.75rem; font-weight: 700; background: linear-gradient(135deg, #3fb950 0%, #1f6feb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header p { color: var(--muted); font-size: .9rem; margin-top: .4rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative; overflow: hidden; transition: border-color .2s; }
+    .card:hover { border-color: #444c56; }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0; transition: opacity .3s; }
+    .card:hover::before { opacity: 1; }
+    .card-title { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+    .card-title span.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
+    .token-row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    .token-row input { flex: 1; min-width: 200px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: .85rem; padding: .65rem 1rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .token-row input:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px var(--glow2); }
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: .6rem; }
+    .model-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .75rem; cursor: pointer; font-size: .8rem; font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: all .15s; user-select: none; }
+    .model-chip:hover { border-color: var(--accent2); color: var(--text); }
+    .model-chip.active { background: rgba(31,111,235,.12); border-color: var(--accent2); color: #79c0ff; box-shadow: 0 0 0 2px var(--glow2); }
+    .prompt-area { display: flex; flex-direction: column; gap: .75rem; }
+    textarea { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif; font-size: .9rem; padding: .75rem 1rem; resize: vertical; min-height: 90px; outline: none; transition: border-color .2s, box-shadow .2s; line-height: 1.6; }
+    textarea:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px var(--glow2); }
+    .btn-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+    button { display: inline-flex; align-items: center; gap: .45rem; padding: .6rem 1.25rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: .875rem; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    #btn-ping { background: var(--accent); color: #fff; }
+    #btn-ping:hover:not(:disabled) { background: #2ea043; box-shadow: 0 0 14px var(--glow); transform: translateY(-1px); }
+    #btn-send { background: var(--accent2); color: #fff; flex: 1; }
+    #btn-send:hover:not(:disabled) { background: #388bfd; box-shadow: 0 0 14px var(--glow2); transform: translateY(-1px); }
+    #btn-clear { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    #btn-clear:hover:not(:disabled) { border-color: var(--error); color: var(--error); }
+    .status-badge { display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem; font-weight: 500; padding: .3rem .8rem; border-radius: 20px; border: 1px solid transparent; transition: all .3s; white-space: nowrap; }
+    .status-badge.idle { background: rgba(125,133,144,.1); border-color: var(--border); color: var(--muted); }
+    .status-badge.loading { background: rgba(210,153,34,.1); border-color: var(--warn); color: var(--warn); }
+    .status-badge.ok { background: rgba(63,185,80,.1); border-color: var(--success); color: var(--success); }
+    .status-badge.fail { background: rgba(248,81,73,.1); border-color: var(--error); color: var(--error); }
+    .response-box { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; min-height: 120px; font-size: .875rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; word-break: break-word; font-family: 'JetBrains Mono', monospace; overflow: auto; max-height: 420px; }
+    .response-box.empty { color: var(--muted); font-style: italic; font-family: 'Inter', sans-serif; }
+    .meta-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .meta-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .25rem .6rem; font-size: .75rem; font-family: 'JetBrains Mono', monospace; color: var(--muted); display: flex; align-items: center; gap: .3rem; }
+    .meta-pill .val { color: var(--text); font-weight: 500; }
+    .spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hint { font-size: .78rem; color: var(--muted); margin-top: .4rem; }
+    .hint code { color: #79c0ff; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span style="font-size:1.05rem;font-weight:700;">GitHub Models</span>
+    </div>
+    <h1>Token &amp; LLM Tester</h1>
+    <p>Verify your GitHub token works with the GitHub Models inference API</p>
+  </div>
+
+  <!-- Token -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>GitHub Token</div>
+    <div class="token-row">
+      <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+      <div class="status-badge idle" id="status-badge">
+        <span id="status-text">Not tested</span>
+      </div>
+      <button id="btn-ping">
+        <span class="spinner" id="ping-spinner"></span>
+        <span id="ping-label">Ping API</span>
+      </button>
+    </div>
+    <p class="hint">Paste your <code>GITHUB_TOKEN</code> above and click <strong>Ping API</strong> to test connectivity.</p>
+  </div>
+
+  <!-- Model selector -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent2);"></span>Select Model</div>
+    <div class="model-grid" id="model-grid">
+      <div class="model-chip active" data-model="gpt-4o-mini">gpt-4o-mini</div>
+      <div class="model-chip" data-model="gpt-4o">gpt-4o</div>
+      <div class="model-chip" data-model="meta/llama-3.3-70b-instruct">llama-3.3-70b</div>
+      <div class="model-chip" data-model="meta/llama-3.1-405b-instruct">llama-3.1-405b</div>
+      <div class="model-chip" data-model="mistral-ai/mistral-large">mistral-large</div>
+      <div class="model-chip" data-model="microsoft/phi-4">phi-4</div>
+      <div class="model-chip" data-model="anthropic/claude-3.5-sonnet">claude-3.5-sonnet</div>
+      <div class="model-chip" data-model="Codestral-2501">codestral-2501</div>
+    </div>
+  </div>
+
+  <!-- Prompt -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:#a371f7;"></span>Test Prompt</div>
+    <div class="prompt-area">
+      <textarea id="prompt" placeholder="Ask anything — e.g. 'Write a Python hello world'  (Ctrl+Enter to send)"></textarea>
+      <div class="btn-row">
+        <button id="btn-send">
+          <span class="spinner" id="send-spinner"></span>
+          <span id="send-label">&#9654; Send</span>
+        </button>
+        <button id="btn-clear">&#x2715; Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Response -->
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <span class="dot" style="background:#e3b341;"></span>Response
+      </div>
+      <div class="meta-row" id="meta-row" style="display:none;"></div>
+    </div>
+    <div class="response-box empty" id="response-box">Response will appear here…</div>
+  </div>
+</div>
+
+<script>
+  const ENDPOINT = 'https://models.inference.ai.azure.com';
+  let selectedModel = 'gpt-4o-mini';
+
+  // Pre-fill token from URL param ?token=ghp_xxx
+  const params = new URLSearchParams(location.search);
+  if (params.get('token')) document.getElementById('token-input').value = params.get('token');
+
+  // Model chips
+  document.querySelectorAll('.model-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedModel = chip.dataset.model;
+    });
+  });
+
+  function showStatus(state, text) {
+    const b = document.getElementById('status-badge');
+    b.className = 'status-badge ' + state;
+    document.getElementById('status-text').textContent = text;
+  }
+
+  function getToken() { return document.getElementById('token-input').value.trim(); }
+
+  // Ping
+  document.getElementById('btn-ping').addEventListener('click', async () => {
+    const token = getToken();
+    if (!token) { showStatus('fail', 'No token entered'); return; }
+    showStatus('loading', 'Testing…');
+    setLoading('ping', true);
+    try {
+      const res = await fetch(ENDPOINT + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ model: selectedModel, messages: [{ role: 'user', content: 'Reply with: pong' }], max_tokens: 10 })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showStatus('fail', res.status + ': ' + (err?.error?.message || res.statusText));
+      } else {
+        const data = await res.json();
+        const reply = data?.choices?.[0]?.message?.content?.trim() || '(ok)';
+        showStatus('ok', '✓ Connected — model replied: "' + reply + '"');
+      }
+    } catch(e) { showStatus('fail', 'Network error: ' + e.message); }
+    finally { setLoading('ping', false); }
+  });
+
+  // Send
+  document.getElementById('btn-send').addEventListener('click', async () => {
+    const token = getToken();
+    const prompt = document.getElementById('prompt').value.trim();
+    if (!token) { showResp('⚠️  Enter your GitHub token first.', '#f85149'); return; }
+    if (!prompt) { showResp('⚠️  Enter a prompt.', '#f85149'); return; }
+    showResp('', 'var(--text)', true);
+    setLoading('send', true);
+    document.getElementById('meta-row').style.display = 'none';
+    const t0 = Date.now();
+    try {
+      const res = await fetch(ENDPOINT + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ model: selectedModel, messages: [{ role: 'user', content: prompt }], max_tokens: 1024, temperature: 0.7 })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showResp('❌ ' + res.status + ': ' + (err?.error?.message || res.statusText), '#f85149');
+        return;
+      }
+      const data = await res.json();
+      const reply = data?.choices?.[0]?.message?.content || '(empty)';
+      const u = data?.usage || {};
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+      showResp(reply, 'var(--text)');
+      showStatus('ok', '✓ Token valid');
+      showMeta([
+        { label: 'model', val: data.model || selectedModel },
+        { label: 'prompt tok', val: u.prompt_tokens ?? '—' },
+        { label: 'completion tok', val: u.completion_tokens ?? '—' },
+        { label: 'total', val: u.total_tokens ?? '—' },
+        { label: 'latency', val: elapsed + 's' },
+      ]);
+    } catch(e) { showResp('❌ Network error: ' + e.message, '#f85149'); }
+    finally { setLoading('send', false); }
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    document.getElementById('prompt').value = '';
+    const box = document.getElementById('response-box');
+    box.textContent = 'Response will appear here…';
+    box.className = 'response-box empty';
+    box.style.color = '';
+    document.getElementById('meta-row').style.display = 'none';
+  });
+
+  document.getElementById('prompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) document.getElementById('btn-send').click();
+  });
+
+  function setLoading(which, on) {
+    if (which === 'ping') {
+      document.getElementById('ping-spinner').style.display = on ? 'block' : 'none';
+      document.getElementById('ping-label').textContent = on ? 'Testing…' : 'Ping API';
+      document.getElementById('btn-ping').disabled = on;
+    } else {
+      document.getElementById('send-spinner').style.display = on ? 'block' : 'none';
+      document.getElementById('send-label').textContent = on ? 'Waiting…' : '▶ Send';
+      document.getElementById('btn-send').disabled = on;
+    }
+  }
+
+  function showResp(text, color, loading) {
+    const box = document.getElementById('response-box');
+    if (loading) { box.textContent = '⏳ Waiting for response…'; box.className = 'response-box'; box.style.color = 'var(--muted)'; return; }
+    box.textContent = text || 'Response will appear here…';
+    box.className = text ? 'response-box' : 'response-box empty';
+    box.style.color = color || '';
+  }
+
+  function showMeta(items) {
+    const row = document.getElementById('meta-row');
+    row.innerHTML = items.map(i => '<div class="meta-pill"><span class="label">' + i.label + ':&nbsp;</span><span class="val">' + i.val + '</span></div>').join('');
+    row.style.display = 'flex';
+  }
+</script>
+</body>
+</html>

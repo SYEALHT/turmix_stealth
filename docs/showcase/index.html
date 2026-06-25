@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Turmux Vibe — Build Any App in Plain English</title>
+<meta name="description" content="Turmux Vibe: AI-powered full-stack app generator. Describe your app, get a complete codebase pushed to GitHub in minutes. 15+ AI models, Discord bot, Termux mobile support."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #09050d;
+  --bg-grad: linear-gradient(180deg, #09050d 0%, #120a1f 100%);
+  --surface: rgba(15, 10, 25, 0.45);
+  --card: rgba(22, 14, 38, 0.5);
+  --card2: rgba(30, 20, 50, 0.55);
+  --border: rgba(140, 80, 255, 0.15);
+  --border-hover: rgba(180, 120, 255, 0.4);
+  --purple: #8b5cf6;
+  --purple2: #c4b5fd;
+  --cyan: #22d3ee;
+  --blue: #3b82f6;
+  --blue2: #60a5fa;
+  --green: #10b981;
+  --green2: #34d399;
+  --text: #f8f5ff;
+  --muted: #a79fc2;
+  --glow-purple: rgba(139, 92, 246, 0.5);
+  --glow-cyan: rgba(34, 211, 238, 0.5);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { 
+  background: var(--bg); 
+  background-image: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+  color: var(--text); 
+  font-family: 'Inter', sans-serif; 
+  overflow-x: hidden; 
+}
+::selection { background: rgba(139, 92, 246, 0.5); color: #fff; }
+::-webkit-scrollbar { width: 6px; } 
+::-webkit-scrollbar-track { background: var(--bg); } 
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
+
+/* ─── NAV ─────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  background: rgba(15, 10, 25, 0.6);
+  padding: .9rem 2rem; display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.15rem;
+  background: linear-gradient(135deg, var(--purple2), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: -.02em;
+}
+.nav-links { display: flex; gap: 2rem; align-items: center; }
+.nav-links a { color: var(--muted); font-size: .875rem; text-decoration: none; transition: color .2s; }
+.nav-links a:hover { color: var(--text); text-shadow: 0 0 10px var(--purple2); }
+.nav-cta {
+  background: rgba(139, 92, 246, 0.15); border: 1px solid var(--purple); color: #fff;
+  font-size: .8rem; font-weight: 600; padding: .45rem 1.1rem; border-radius: 8px; text-decoration: none;
+  transition: all .3s;
+}
+.nav-cta:hover {
+  background: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 15px var(--glow-purple), inset 0 0 10px rgba(139, 92, 246, 0.4);
+}
+
+/* ─── HERO ─────────────────────────────────────────────────────── */
+#hero {
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; padding: 7rem 1.5rem 4rem; text-align: center;
+}
+#canvas-bg { position: absolute; inset: 0; z-index: 0; opacity: 0.6; }
+.hero-glow-1 {
+  position: absolute; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
+  top: -100px; left: 50%; transform: translateX(-60%); pointer-events: none; z-index: 0;
+}
+.hero-glow-2 {
+  position: absolute; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.2) 0%, transparent 70%);
+  bottom: 0; right: 0; pointer-events: none; z-index: 0;
+}
+.hero-content { position: relative; z-index: 1; max-width: 860px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 20px; padding: .35rem .9rem; font-size: .78rem; font-weight: 500;
+  color: var(--cyan); margin-bottom: 1.75rem; letter-spacing: .04em;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+}
+.hero-badge span {
+  width: 6px; height: 6px; background: var(--cyan); border-radius: 50%;
+  animation: blink 2s infinite; box-shadow: 0 0 8px var(--cyan);
+}
+@keyframes blink { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--cyan); } 50% { opacity: .4; box-shadow: none; } }
+h1 {
+  font-family: 'Space Grotesk', sans-serif; font-size: clamp(2.8rem, 6vw, 5.5rem);
+  font-weight: 700; line-height: 1.05; letter-spacing: -.04em; margin-bottom: 1.2rem;
+}
+.grad-text {
+  background: linear-gradient(135deg, #c4b5fd 0%, #22d3ee 50%, #34d399 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.3));
+}
+.hero-sub { font-size: 1.15rem; color: var(--muted); line-height: 1.7; max-width: 600px; margin: 0 auto 2.5rem; }
+.typewriter-wrap { height: 1.6em; overflow: hidden; margin-bottom: 2.5rem; }
+#typewriter { font-size: 1.1rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-weight: 500; text-shadow: 0 0 10px rgba(34,211,238,0.5); }
+#cursor { display: inline-block; width: 2px; height: 1.1em; background: var(--cyan); margin-left: 2px; vertical-align: text-bottom; animation: blink-cursor .8s infinite; }
+@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 4rem; }
+
+/* High-Voltage Reactor Hover Button */
+.btn-primary {
+  background: linear-gradient(135deg, var(--purple), var(--cyan)); color: #fff;
+  font-family: 'Inter', sans-serif; font-weight: 600; font-size: .9rem;
+  padding: .8rem 2rem; border-radius: 10px; text-decoration: none; border: none;
+  cursor: pointer; transition: all .3s; position: relative; overflow: hidden;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+.btn-primary::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, #a78bfa, #67e8f9); opacity: 0; transition: opacity .3s;
+}
+.btn-primary:hover::before { opacity: 1; } 
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px var(--glow-purple), 0 0 45px var(--glow-cyan), inset 0 0 15px rgba(255,255,255,0.4);
+}
+.btn-primary span { position: relative; z-index: 1; }
+.btn-ghost {
+  background: var(--surface); backdrop-filter: blur(10px);
+  border: 1px solid var(--border); color: var(--text);
+  font-family: 'Inter', sans-serif; font-weight: 500; font-size: .9rem;
+  padding: .8rem 2rem; border-radius: 10px; text-decoration: none; transition: all .3s;
+}
+.btn-ghost:hover {
+  border-color: var(--cyan); background: rgba(34, 211, 238, 0.1);
+  transform: translateY(-2px); box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+}
+
+/* Glassmorphic Terminal */
+.terminal {
+  background: rgba(10, 5, 20, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border); border-radius: 14px; max-width: 680px; margin: 0 auto;
+  text-align: left; overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(139,92,246,0.1), 0 0 50px rgba(139,92,246,0.15);
+}
+.terminal-bar {
+  background: rgba(20, 15, 35, 0.8); padding: .6rem 1rem; display: flex; align-items: center;
+  gap: .45rem; border-bottom: 1px solid var(--border);
+}
+.dot-r { width:11px; height:11px; border-radius:50%; background:#ff5f57; box-shadow: 0 0 5px #ff5f57; }
+.dot-y { width:11px; height:11px; border-radius:50%; background:#febc2e; box-shadow: 0 0 5px #febc2e; }
+.dot-g { width:11px; height:11px; border-radius:50%; background:#28c840; box-shadow: 0 0 5px #28c840; }
+.terminal-title { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); margin-left: .5rem; }
+.terminal-body { padding: 1.2rem 1.4rem; font-family: 'JetBrains Mono', monospace; font-size: .82rem; line-height: 1.8; min-height: 200px; }
+.t-prompt { color: var(--cyan); text-shadow: 0 0 5px var(--cyan); } 
+.t-cmd { color: #fff; } 
+.t-out { color: var(--muted); } 
+.t-success { color: var(--green2); text-shadow: 0 0 5px var(--green2); } 
+.t-url { color: var(--blue2); text-decoration: underline; text-shadow: 0 0 5px var(--blue2); } 
+.t-step { color: var(--purple2); }
+
+/* ─── SECTION COMMON ──────────────────────────────────────────── */
+section { padding: 6rem 1.5rem; position: relative; }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+.section-label {
+  font-size: .75rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--cyan); margin-bottom: .75rem; text-shadow: 0 0 10px rgba(34,211,238,0.5);
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.9rem, 3.5vw, 2.8rem);
+  font-weight: 700; letter-spacing: -.03em; line-height: 1.15; margin-bottom: 1rem;
+}
+.section-sub { color: var(--muted); font-size: 1.05rem; line-height: 1.7; max-width: 560px; }
+
+/* ─── HOW IT WORKS ────────────────────────────────────────────── */
+#how { background: var(--bg-grad); }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3.5rem; position: relative; }
+.step {
+  background: var(--card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden;
+  transition: all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.step:hover {
+  border-color: var(--cyan); transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(34,211,238,0.2), inset 0 0 15px rgba(139,92,246,0.1);
+}
+.step::after {
+  content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(34,211,238,0.08), transparent);
+  opacity: 0; transition: opacity .3s;
+}
+.step:hover::after { opacity: 1; }
+.step-num {
+  font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--purple2), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1; margin-bottom: 1rem; opacity: 0.8;
+}
+.step-icon {
+  width: 48px; height: 48px; background: linear-gradient(135deg, var(--purple), var(--cyan));
+  border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem;
+  box-shadow: 0 0 15px rgba(139,92,246,0.5);
+}
+.step-icon svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.step h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 600; margin-bottom: .6rem; }
+.step p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+.step-connector { display: none; }
+@media(min-width:900px){
+  .steps { grid-template-columns: repeat(3, 1fr); }
+  .step-connector {
+    display: block; position: absolute; top: 50%; left: calc(33.33% - 1px); width: calc(33.33% + 2px);
+    height: 1px; background: linear-gradient(90deg, var(--purple), var(--cyan)); z-index: 10;
+    box-shadow: 0 0 8px var(--purple);
+  }
+}
+
+/* ─── FEATURES BENTO ──────────────────────────────────────────── */
+#features { background: var(--bg); }
+.bento { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto; gap: 1rem; margin-top: 3.5rem; }
+@media(max-width:900px){ .bento { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width:600px){ .bento { grid-template-columns: 1fr; } }
+
+.feat-card {
+  background: var(--card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; position: relative; overflow: hidden;
+  transition: all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: default;
+}
+/* Subtle noise texture for depth */
+.feat-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  opacity: .5; pointer-events: none; z-index: 0; mix-blend-mode: overlay;
+}
+/* Glowing neon shadow on hover */
+.feat-card:hover {
+  border-color: var(--border-hover); transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 20px rgba(139,92,246,0.3), inset 0 0 15px rgba(34,211,238,0.1);
+}
+.feat-card > * { position: relative; z-index: 1; }
+
+.feat-card.wide { grid-column: span 2; }
+.feat-card.tall { grid-row: span 2; }
+.feat-icon {
+  width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1rem; font-size: 1.3rem;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.1);
+}
+.fi-purple { background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: var(--purple2); text-shadow: 0 0 8px var(--purple); }
+.fi-cyan { background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.3); color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
+.fi-green { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--green2); text-shadow: 0 0 8px var(--green); }
+.fi-pink { background: rgba(219, 39, 119, 0.15); border: 1px solid rgba(219, 39, 119, 0.3); color: #f472b6; text-shadow: 0 0 8px #db2777; }
+.fi-orange { background: rgba(234, 88, 12, 0.15); border: 1px solid rgba(234, 88, 12, 0.3); color: #fb923c; text-shadow: 0 0 8px #ea580c; }
+
+.feat-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 600; margin-bottom: .5rem; }
+.feat-card p { color: var(--muted); font-size: .875rem; line-height: 1.6; }
+.feat-tag {
+  display: inline-block; background: rgba(34, 211, 238, 0.1); border: 1px solid rgba(34, 211, 238, 0.25);
+  border-radius: 6px; padding: .2rem .6rem; font-size: .75rem; font-weight: 600; color: var(--cyan); margin-top: 1rem;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.1); text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* ─── AI MODELS TICKER ────────────────────────────────────────── */
+#models { background: var(--bg-grad); overflow: hidden; padding: 5rem 0; position: relative; }
+#models::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(139,92,246,0.05) 0%, transparent 70%); }
+.models-head { text-align: center; padding: 0 1.5rem; margin-bottom: 3rem; position: relative; z-index: 1; }
+.ticker-wrap { display: flex; gap: 0; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); position: relative; z-index: 1; }
+.ticker-track { display: flex; gap: 1rem; animation: ticker 28s linear infinite; flex-shrink: 0; }
+.ticker-track2 { animation-direction: reverse; animation-duration: 22s; }
+@keyframes ticker { to { transform: translateX(-50%); } }
+.model-chip {
+  display: inline-flex; align-items: center; gap: .5rem; background: var(--card2); backdrop-filter: blur(5px);
+  border: 1px solid var(--border); border-radius: 10px; padding: .6rem 1.2rem; white-space: nowrap;
+  font-size: .85rem; font-weight: 500; font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s;
+}
+.model-chip:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(139,92,246,0.2); }
+.mc-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+.mc-openai { color: #74aa9c; } .mc-openai .mc-dot { background: #74aa9c; }
+.mc-anthropic { color: #cc9b7a; } .mc-anthropic .mc-dot { background: #cc9b7a; }
+.mc-meta { color: #60a5fa; } .mc-meta .mc-dot { background: #3b82f6; }
+.mc-google { color: #818cf8; } .mc-google .mc-dot { background: #6366f1; }
+.mc-mistral { color: #f87171; } .mc-mistral .mc-dot { background: #ef4444; }
+.mc-ms { color: #9ca3af; } .mc-ms .mc-dot { background: #6b7280; }
+.mc-groq { color: #fb923c; } .mc-groq .mc-dot { background: #f97316; }
+
+/* ─── DISCORD DEMO ────────────────────────────────────────────── */
+#demo { background: var(--bg); position: relative; }
+.demo-glow { position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 60%); top: 10%; right: -10%; pointer-events: none; }
+.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3.5rem; position: relative; z-index: 1; }
+@media(max-width:900px){ .demo-grid { grid-template-columns: 1fr; } }
+.demo-text .section-sub { max-width: 100%; }
+
+.discord-mock {
+  background: rgba(43, 45, 49, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,0.05), 0 0 40px rgba(139,92,246,0.2);
+}
+.dc-sidebar { background: rgba(30, 31, 34, 0.9); padding: 1rem; display: flex; flex-direction: column; gap: .25rem; border-right: 1px solid rgba(255,255,255,0.02); }
+.dc-channel { font-size: .85rem; color: #949ba4; padding: .3rem .5rem; border-radius: 4px; display: flex; align-items: center; gap: .4rem; cursor: default; }
+.dc-channel.active { background: rgba(63, 65, 71, 0.6); color: #fff; }
+.dc-hash { opacity: .6; font-size: 1rem; }
+.dc-messages { padding: 1.5rem; }
+.dc-msg { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+.dc-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 700; color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.av-user { background: linear-gradient(135deg, #5865f2, #3ba55c); }
+.av-bot { background: linear-gradient(135deg, #8b5cf6, #0ea5e9); }
+.dc-name { font-size: .9rem; font-weight: 600; margin-bottom: .3rem; display: flex; align-items: center; gap: .5rem; }
+.dc-tag { background: #5865f2; font-size: .65rem; padding: .1rem .35rem; border-radius: 3px; font-weight: 600; letter-spacing: .03em; }
+.dc-text { font-size: .9rem; color: #dbdee1; line-height: 1.5; font-family: 'Inter', sans-serif; }
+.dc-text code { font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.3); padding: .1rem .3rem; border-radius: 3px; color: #e2e8f0; }
+.dc-slash { color: #5865f2; font-weight: 500; }
+.dc-embed {
+  background: rgba(43, 45, 49, 0.9); border-left: 4px solid var(--green2); border-radius: 4px; padding: 1rem 1.25rem;
+  margin-top: .75rem; font-size: .85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.dc-embed-title { font-weight: 700; color: #fff; margin-bottom: .75rem; font-size: .95rem; }
+.dc-embed-field { margin-bottom: .6rem; }
+.dc-embed-field-name { font-size: .75rem; font-weight: 700; color: #b5bac1; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .2rem; }
+.dc-embed-field-val { color: #dbdee1; }
+.dc-embed-field-val a { color: #00a8fc; text-decoration: none; }
+.dc-embed-field-val a:hover { text-decoration: underline; }
+
+/* ─── STATS ───────────────────────────────────────────────────── */
+#stats { background: rgba(15, 10, 25, 0.6); backdrop-filter: blur(10px); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; z-index: 2; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; max-width: 1000px; margin: 0 auto; text-align: center; }
+@media(max-width:750px){ .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem 2rem; } }
+.stat-val {
+  font-family: 'Space Grotesk', sans-serif; font-size: 3rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--purple2), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1; filter: drop-shadow(0 0 10px rgba(34,211,238,0.3));
+}
+.stat-label { color: var(--muted); font-size: .9rem; margin-top: .75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ─── TECH STACK ──────────────────────────────────────────────── */
+#tech { background: var(--bg); position: relative; }
+.tech-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2.5rem; justify-content: flex-start; }
+.tech-badge {
+  display: inline-flex; align-items: center; gap: .6rem;
+  background: var(--card2); backdrop-filter: blur(10px); border: 1px solid var(--border);
+  border-radius: 12px; padding: .65rem 1.25rem; font-size: .9rem; font-weight: 500; transition: all .3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.tech-badge:hover {
+  border-color: var(--cyan); background: rgba(34, 211, 238, 0.08);
+  transform: translateY(-3px); box-shadow: 0 8px 25px rgba(34,211,238,0.2); color: #fff;
+}
+.tech-badge .badge-icon { font-size: 1.2rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+
+/* ─── FOOTER ──────────────────────────────────────────────────── */
+footer { background: var(--surface); backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 3rem 1.5rem; text-align: center; position: relative; z-index: 2; }
+.footer-inner { max-width: 900px; margin: 0 auto; }
+.footer-logo {
+  font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--purple2), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 1rem; display: inline-block;
+}
+.footer-sub { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+.footer-links { display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap; }
+.footer-links a { color: var(--muted); font-size: .9rem; font-weight: 500; text-decoration: none; transition: all .2s; }
+.footer-links a:hover { color: var(--text); text-shadow: 0 0 10px var(--cyan); }
+.footer-copy { color: var(--muted2); font-size: .8rem; margin-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem; }
+
+/* ─── SCROLL REVEAL ──────────────────────────────────────────── */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1); }
+.reveal.visible { opacity: 1; transform: none; }
+.reveal-delay-1 { transition-delay: .1s; } .reveal-delay-2 { transition-delay: .2s; } .reveal-delay-3 { transition-delay: .3s; } .reveal-delay-4 { transition-delay: .4s; }
+
+/* ─── MISC ────────────────────────────────────────────────────── */
+.glow-line { height: 1px; background: linear-gradient(90deg, transparent, var(--purple), var(--cyan), transparent); margin: 0 auto; width: 80%; opacity: .5; box-shadow: 0 0 10px var(--purple); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⚡ Turmux Vibe</div>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#demo">Demo</a>
+    <a href="https://github.com" class="nav-cta">GitHub →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="canvas-bg"></canvas>
+  <div class="hero-glow-1"></div>
+  <div class="hero-glow-2"></div>
+  <div class="hero-content">
+    <div class="hero-badge reveal"><span></span> AI-Powered · Free with GitHub Student Pack</div>
+    <h1 class="reveal reveal-delay-1">Build <span class="grad-text">Any App</span><br/>In Plain English.</h1>
+    <p class="hero-sub reveal reveal-delay-2">Describe what you want. Get a complete, production-ready codebase — with Dockerfile, docs, and tests — pushed to your private GitHub repo in under 3 minutes.</p>
+    <div class="typewriter-wrap reveal reveal-delay-3">
+      <span id="typewriter"></span><span id="cursor"></span>
+    </div>
+    <div class="hero-btns reveal reveal-delay-4">
+      <a href="https://github.com" class="btn-primary"><span>⭐ View on GitHub</span></a>
+      <a href="#demo" class="btn-ghost">See It In Action →</a>
+    </div>
+    <div class="terminal reveal reveal-delay-4">
+      <div class="terminal-bar">
+        <div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div>
+        <span class="terminal-title">turmux-vibe — Discord /build</span>
+      </div>
+      <div class="terminal-body" id="term-body">
+        <div class="t-out">Connecting to Turmux Vibe...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <div class="section-label reveal">How It Works</div>
+    <h2 class="section-title reveal">From idea to GitHub repo<br/>in three steps</h2>
+    <p class="section-sub reveal">No setup, no boilerplate, no waiting. Just describe what you want and let the AI do the rest.</p>
+    <div class="steps">
+      <div class="step reveal reveal-delay-1">
+        <div class="step-num">01</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3>Describe Your App</h3>
+        <p>Type a plain-English description in Discord or the CLI. Any stack, any complexity — from a simple REST API to a full-stack SaaS with auth.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step reveal reveal-delay-2">
+        <div class="step-num">02</div>
+        <div class="step-icon" style="background:linear-gradient(135deg,var(--purple),var(--cyan))">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </div>
+        <h3>AI Generates Everything</h3>
+        <p>15+ AI models plan the architecture, then generate every file: source code, Dockerfile, tests, docs, README — validated and auto-fixed in 3 passes.</p>
+      </div>
+      <div class="step-connector" style="left:calc(66.66% - 1px);"></div>
+      <div class="step reveal reveal-delay-3">
+        <div class="step-num">03</div>
+        <div class="step-icon" style="background:linear-gradient(135deg,var(--cyan),var(--green))">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+        </div>
+        <h3>Pushed to GitHub</h3>
+        <p>The complete codebase is pushed to a new private repo on your GitHub account — instantly. Optional Vercel deploy gives you a live URL too.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- FEATURES BENTO -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-label reveal">Capabilities</div>
+    <h2 class="section-title reveal">Everything you need,<br/>nothing you don't</h2>
+    <div class="bento">
+      <div class="feat-card wide reveal reveal-delay-1">
+        <div class="feat-icon fi-cyan">🧠</div>
+        <h3>15+ World-Class AI Models</h3>
+        <p>Switch between GPT-4o, Claude 3.5 Sonnet, Llama 3.1 405B, Gemini 2.5 Pro, Mistral Large, Phi-4, and more — all from a single token. Intelligent cross-model fallback means you never hit a dead end.</p>
+        <div class="feat-tag">Runtime model switching</div>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon fi-purple">🤖</div>
+        <h3>Discord Bot Interface</h3>
+        <p>Use <code>/build</code>, <code>/update</code>, <code>/model</code> commands directly in Discord. Meets developers where they already are.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon fi-green">📱</div>
+        <h3>Mobile-First with Termux</h3>
+        <p>Build and deploy full-stack apps from your Android phone. No laptop required — <code>termux_setup.sh</code> handles everything.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon fi-purple">🐙</div>
+        <h3>Instant GitHub Push</h3>
+        <p>Uses GitHub Contents API directly — no git CLI needed. Private repos created and populated in seconds.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-3">
+        <div class="feat-icon fi-orange">🚀</div>
+        <h3>Vercel Auto-Deploy</h3>
+        <p>Add a Vercel token and every generated app automatically gets a live URL. Zero config deployment.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon fi-pink">🛡️</div>
+        <h3>3-Pass Generation</h3>
+        <p>Plan → Generate → Validate & Fix. A third AI pass catches deprecated libraries, broken imports, and security issues before the code ever reaches GitHub.</p>
+        <div class="feat-tag">Quality guaranteed</div>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon fi-cyan">⚡</div>
+        <h3>Rate Limit Protection</h3>
+        <p>Exponential backoff + automatic cross-model fallback means your build completes even when one model is throttled.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-3">
+        <div class="feat-icon fi-green">🔄</div>
+        <h3>AI Repo Updater</h3>
+        <p>Use <code>/update</code> to describe changes to any existing repo. AI fetches the current files and surgically applies your requested changes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI MODELS TICKER -->
+<section id="models" class="reveal">
+  <div class="models-head">
+    <div class="section-label">Powered By</div>
+    <h2 class="section-title" style="text-align:center;">15+ World-Class Models</h2>
+    <p style="color:var(--muted);text-align:center;font-size:1.05rem;">All accessible through your existing GitHub Student Pack token — no credit card.</p>
+  </div>
+  <div class="ticker-wrap" style="margin-bottom:1.5rem;">
+    <div class="ticker-track" id="ticker1"></div>
+    <div class="ticker-track" id="ticker1b" aria-hidden="true"></div>
+  </div>
+  <div class="ticker-wrap">
+    <div class="ticker-track ticker-track2" id="ticker2"></div>
+    <div class="ticker-track ticker-track2" id="ticker2b" aria-hidden="true"></div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- DISCORD DEMO -->
+<section id="demo">
+  <div class="demo-glow"></div>
+  <div class="section-inner">
+    <div class="demo-grid">
+      <div class="demo-text">
+        <div class="section-label reveal">Live Demo</div>
+        <h2 class="section-title reveal">Discord as your<br/>AI dev studio</h2>
+        <p class="section-sub reveal">Type a single command. Watch as Turmux Vibe plans the architecture, generates every file, and hands you a private GitHub repo link — all inside Discord.</p>
+        <div style="margin-top:2.5rem;" class="reveal reveal-delay-1">
+          <div style="display:flex;flex-direction:column;gap:1.2rem;">
+            <div style="display:flex;align-items:center;gap:1rem;font-size:.95rem;color:var(--text);font-weight:500;">
+              <span style="width:28px;height:28px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--purple2);box-shadow:0 0 10px rgba(139,92,246,.3);">✓</span>
+              Real-time progress updates in Discord
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;font-size:.95rem;color:var(--text);font-weight:500;">
+              <span style="width:28px;height:28px;background:rgba(34,211,238,.2);border:1px solid rgba(34,211,238,.4);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cyan);box-shadow:0 0 10px rgba(34,211,238,.3);">✓</span>
+              Rich embeds with repo URL, tech stack, file count
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;font-size:.95rem;color:var(--text);font-weight:500;">
+              <span style="width:28px;height:28px;background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.4);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--green2);box-shadow:0 0 10px rgba(16,185,129,.3);">✓</span>
+              Switch models mid-session with /model
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="discord-mock">
+          <div style="display:flex;">
+            <div class="dc-sidebar" style="width:170px;">
+              <div style="font-size:.7rem;font-weight:700;color:#949ba4;letter-spacing:.08em;padding:.5rem .5rem .25rem;">TEXT CHANNELS</div>
+              <div class="dc-channel"><span class="dc-hash">#</span> general</div>
+              <div class="dc-channel active"><span class="dc-hash">#</span> build-apps</div>
+              <div class="dc-channel"><span class="dc-hash">#</span> updates</div>
+            </div>
+            <div style="flex:1;">
+              <div style="background:rgba(43,45,49,0.9);padding:.8rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.05);font-size:.9rem;font-weight:600;color:#fff;display:flex;align-items:center;gap:.5rem;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                <span style="color:#949ba4;">#</span> build-apps
+              </div>
+              <div class="dc-messages">
+                <div class="dc-msg">
+                  <div class="dc-avatar av-user">You</div>
+                  <div class="dc-msg-body">
+                    <div class="dc-name">you <span style="color:#949ba4;font-size:.75rem;font-weight:400;">Today at 11:42 PM</span></div>
+                    <div class="dc-text"><span class="dc-slash">/build</span> description: <code>todo app with React frontend and FastAPI backend with JWT auth and PostgreSQL</code></div>
+                  </div>
+                </div>
+                <div class="dc-msg">
+                  <div class="dc-avatar av-bot">TV</div>
+                  <div class="dc-msg-body">
+                    <div class="dc-name" style="color:#c4b5fd;">Turmux Vibe <span class="dc-tag">BOT</span></div>
+                    <div class="dc-embed">
+                      <div class="dc-embed-title">✅ App Generated &amp; Pushed to GitHub!</div>
+                      <div class="dc-embed-field">
+                        <div class="dc-embed-field-name">📦 Repository</div>
+                        <div class="dc-embed-field-val"><a href="#">todo-react-fastapi-jwt</a> <em style="color:#949ba4;">(private)</em></div>
+                      </div>
+                      <div class="dc-embed-field">
+                        <div class="dc-embed-field-name">🛠 Tech Stack</div>
+                        <div class="dc-embed-field-val">React, FastAPI, PostgreSQL, Docker, JWT</div>
+                      </div>
+                      <div class="dc-embed-field">
+                        <div class="dc-embed-field-name">📁 Files Generated</div>
+                        <div class="dc-embed-field-val">14 files · 📊 4,218 tokens</div>
+                      </div>
+                      <div class="dc-embed-field">
+                        <div class="dc-embed-field-name">▶️ How to Run</div>
+                        <div class="dc-embed-field-val" style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#949ba4;background:rgba(0,0,0,0.3);padding:.2rem .4rem;border-radius:4px;display:inline-block;margin-top:.2rem;">docker compose up --build</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="reveal">
+      <div class="stat-val" data-target="15" data-suffix="+">0</div>
+      <div class="stat-label">AI Models Available</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="stat-val" data-target="3" data-suffix=" Pass">0</div>
+      <div class="stat-label">Generation Quality</div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="stat-val" data-target="3" data-prefix="< " data-suffix=" min">0</div>
+      <div class="stat-label">Average Build Time</div>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <div class="stat-val" data-target="100" data-suffix="% Private">0</div>
+      <div class="stat-label">Your Code, Your Repos</div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech" style="padding:6rem 1.5rem;">
+  <div class="section-inner">
+    <div class="section-label reveal">Tech Stack</div>
+    <h2 class="section-title reveal">Built on the best</h2>
+    <div class="tech-grid reveal">
+      <div class="tech-badge"><span class="badge-icon">🐍</span> Python 3.11</div>
+      <div class="tech-badge"><span class="badge-icon">🎮</span> discord.py</div>
+      <div class="tech-badge"><span class="badge-icon">🤖</span> OpenAI SDK</div>
+      <div class="tech-badge"><span class="badge-icon">✨</span> Google Gemini</div>
+      <div class="tech-badge"><span class="badge-icon">🐙</span> PyGithub</div>
+      <div class="tech-badge"><span class="badge-icon">⚡</span> Groq Inference</div>
+      <div class="tech-badge"><span class="badge-icon">🐳</span> Docker</div>
+      <div class="tech-badge"><span class="badge-icon">✈️</span> Fly.io</div>
+      <div class="tech-badge"><span class="badge-icon">▲</span> Vercel</div>
+      <div class="tech-badge"><span class="badge-icon">📱</span> Termux</div>
+      <div class="tech-badge"><span class="badge-icon">🔑</span> GitHub Models API</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">⚡ Turmux Vibe</div>
+    <p class="footer-sub">Built with ❤️ and a lot of AI tokens. Free for everyone.</p>
+    <div class="footer-links">
+      <a href="https://github.com">GitHub</a>
+      <a href="#how">How It Works</a>
+      <a href="#features">Features</a>
+      <a href="#demo">Demo</a>
+    </div>
+    <p class="footer-copy">© 2025 Turmux Vibe · MIT License · Powered by GitHub Models, Gemini &amp; Groq</p>
+  </div>
+</footer>
+
+<script>
+/* ─── CANVAS BACKGROUND ─────────────────────────────────────── */
+(function(){
+  const canvas=document.getElementById('canvas-bg');
+  const ctx=canvas.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  function initPts(){
+    pts=[];
+    for(let i=0;i<100;i++) {
+      pts.push({
+        x:Math.random()*W, y:Math.random()*H,
+        vx:(Math.random()-.5)*.5, vy:(Math.random()-.5)*.5,
+        r:Math.random()*2+.5,
+        color: Math.random() > 0.5 ? 'rgba(139, 92, 246, 0.6)' : 'rgba(34, 211, 238, 0.6)'
+      });
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // Dynamic glow
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.color;
+      ctx.shadowBlur = 10; ctx.shadowColor = p.color; ctx.fill(); ctx.shadowBlur = 0;
+    });
+    // Connections
+    pts.forEach((a,i)=>pts.slice(i+1).forEach(b=>{
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<120){
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(139,92,246,${(1-d/120)*.25})`;ctx.lineWidth=1;ctx.stroke();
+      }
+    }));
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',()=>{resize();initPts();});
+  resize();initPts();draw();
+})();
+
+/* ─── TYPEWRITER ────────────────────────────────────────────── */
+(function(){
+  const lines=['todo app with React + FastAPI + PostgreSQL','Discord bot that tracks crypto prices','full-stack SaaS with auth and Stripe payments','REST API for a bookstore with FastAPI','weather app with 7-day forecast and dark UI','CLI tool to compress and resize images in bulk'];
+  const el=document.getElementById('typewriter');
+  let li=0,ci=0,deleting=false,pause=0;
+  function tick(){
+    if(pause>0){pause--;setTimeout(tick,50);return;}
+    const line=lines[li];
+    if(!deleting){
+      el.textContent=line.slice(0,++ci);
+      if(ci===line.length){deleting=true;pause=60;}
+      setTimeout(tick,deleting?30:55);
+    }else{
+      el.textContent=line.slice(0,--ci);
+      if(ci===0){deleting=false;li=(li+1)%lines.length;pause=20;}
+      setTimeout(tick,30);
+    }
+  }
+  tick();
+})();
+
+/* ─── TERMINAL DEMO ─────────────────────────────────────────── */
+(function(){
+  const body=document.getElementById('term-body');
+  const demos=[
+    [
+      {c:'t-prompt',t:'$ '},
+      {c:'t-cmd',t:'/build description: todo app with React and FastAPI'},
+      {c:'t-out',t:'⏳ Planning app architecture with gpt-4o-mini...'},
+      {c:'t-step',t:'📋 Pass 1: Manifest → 12 files planned'},
+      {c:'t-step',t:'📝 Pass 2: Generating files (1/12): app.py...'},
+      {c:'t-step',t:'📝 Generating (6/12): src/App.jsx...'},
+      {c:'t-step',t:'🔍 Pass 3: Validating & fixing code...'},
+      {c:'t-success',t:'✅ App Generated! Pushing to GitHub...'},
+      {c:'t-url',t:'🔗 https://github.com/you/todo-react-fastapi'},
+      {c:'t-out',t:'⏱️  Build time: 2m 14s | Tokens: 8,432'},
+    ],
+    [
+      {c:'t-prompt',t:'$ '},
+      {c:'t-cmd',t:'/build description: crypto price tracker Discord bot'},
+      {c:'t-out',t:'⏳ Planning with claude-3.5-sonnet...'},
+      {c:'t-step',t:'📋 Pass 1: Manifest → 8 files planned'},
+      {c:'t-step',t:'📝 Generating bot.py, price_fetcher.py...'},
+      {c:'t-success',t:'✅ Pushed! Live URL: https://turmux-bot.fly.dev'},
+      {c:'t-url',t:'🔗 https://github.com/you/crypto-discord-bot'},
+    ],
+  ];
+  let di=0;
+  async function runDemo(){
+    body.innerHTML='';
+    const demo=demos[di%demos.length];di++;
+    for(const line of demo){
+      await new Promise(r=>setTimeout(r,400));
+      const div=document.createElement('div');div.className=line.c;div.textContent=line.t;
+      body.appendChild(div);body.scrollTop=body.scrollHeight;
+    }
+    await new Promise(r=>setTimeout(r,4000));
+    runDemo();
+  }
+  setTimeout(runDemo,1200);
+})();
+
+/* ─── MODEL TICKERS ──────────────────────────────────────────── */
+(function(){
+  const row1=[
+    {label:'gpt-4o',cls:'mc-openai'},{label:'gpt-4o-mini',cls:'mc-openai'},
+    {label:'claude-3.5-sonnet',cls:'mc-anthropic'},{label:'claude-3-haiku',cls:'mc-anthropic'},
+    {label:'llama-3.1-405b',cls:'mc-meta'},{label:'llama-3.3-70b',cls:'mc-meta'},
+    {label:'gemini-2.5-pro',cls:'mc-google'},{label:'gemini-2.5-flash',cls:'mc-google'},
+  ];
+  const row2=[
+    {label:'mistral-large',cls:'mc-mistral'},{label:'phi-4',cls:'mc-ms'},
+    {label:'gemma-3-27b',cls:'mc-google'},{label:'mixtral-8x7b',cls:'mc-groq'},
+    {label:'llama-3.1-8b',cls:'mc-groq'},{label:'gemini-2.0-flash',cls:'mc-google'},
+    {label:'codestral-2501',cls:'mc-mistral'},{label:'gemma2-9b',cls:'mc-groq'},
+  ];
+  function makeChip(m){return `<div class="model-chip ${m.cls}"><div class="mc-dot"></div>${m.label}</div>`;}
+  function fillTicker(id,items){
+    const all=items.map(makeChip).join('');
+    document.getElementById(id).innerHTML=all+all;
+  }
+  fillTicker('ticker1',row1);fillTicker('ticker1b',row1);
+  fillTicker('ticker2',row2);fillTicker('ticker2b',row2);
+})();
+
+/* ─── SCROLL REVEAL ──────────────────────────────────────────── */
+(function(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+  },{threshold:.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+})();
+
+/* ─── COUNTER ANIMATION ──────────────────────────────────────── */
+(function(){
+  const counters=document.querySelectorAll('.stat-val');
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      const el=e.target;
+      const target=+el.dataset.target;
+      const suffix=el.dataset.suffix||'';
+      const prefix=el.dataset.prefix||'';
+      let cur=0;const step=Math.ceil(target/40);
+      const iv=setInterval(()=>{
+        cur=Math.min(cur+step,target);
+        el.textContent=prefix+cur+suffix;
+        if(cur>=target)clearInterval(iv);
+      },30);
+      obs.unobserve(el);
+    });
+  },{threshold:.5});
+  counters.forEach(c=>obs.observe(c));
+})();
+</script>
+</body>
+</html>
